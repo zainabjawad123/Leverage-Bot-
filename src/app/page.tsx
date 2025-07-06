@@ -1,103 +1,179 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React from "react";
+import { useState } from "react";
+import DateRangePicker from "@/components/DateRangePicker";
+import HistoricalDataChart from "@/components/HistoricalDataChart";
+import StrategySteps from "@/components/StrategySteps";
+import StrategyPerformance from "@/components/StrategyPerformance";
+
+export default function Dashboard() {
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date("2024-01-01"),
+    endDate: new Date("2024-12-31"),
+  });
+  const [capitalAmount, setCapitalAmount] = useState<number>(1000);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationSteps, setSimulationSteps] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [hasPlayedAllSteps, setHasPlayedAllSteps] = useState(false);
+
+  const handleSimulate = async () => {
+    try {
+      setIsSimulating(true);
+      setError(null);
+      setHasPlayedAllSteps(false); // Reset the played state when starting new simulation
+      console.log("Starting simulation with:", {
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        capitalAmount,
+      });
+
+      const response = await fetch("/api/simulate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          startDate: dateRange.startDate.toISOString(),
+          endDate: dateRange.endDate.toISOString(),
+          initialCapital: capitalAmount,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Simulation response:", data);
+
+      if (!response.ok) {
+        throw new Error(
+          data.details || data.error || "Failed to simulate strategy"
+        );
+      }
+
+      if (!Array.isArray(data.steps)) {
+        throw new Error("Invalid simulation data: steps array is missing");
+      }
+
+      setSimulationSteps(data.steps);
+      console.log("Simulation steps set:", data.steps);
+    } catch (err) {
+      console.error("Simulation error:", err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  const handleStepsComplete = () => {
+    setHasPlayedAllSteps(true);
+  };
+
+  // Debug log for simulationSteps
+  console.log("Current simulation steps:", simulationSteps);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            DeFi Strategy Simulator
+          </h1>
+          <p className="text-lg text-gray-600">
+            Simulate and visualize your ETH staking and leverage strategies
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="bg-white p-8 rounded-2xl shadow-lg border border-blue-100">
+            <h2 className="text-2xl font-semibold mb-6 text-gray-900">
+              Strategy Parameters
+            </h2>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date Range
+                </label>
+                <DateRangePicker
+                  startDate={dateRange.startDate}
+                  endDate={dateRange.endDate}
+                  onChange={setDateRange}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Initial Capital (USD)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    value={capitalAmount}
+                    onChange={(e) => setCapitalAmount(Number(e.target.value))}
+                    className="pl-8 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-200"
+                    min="100"
+                    step="100"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleSimulate}
+                disabled={isSimulating}
+                className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 transition-all duration-200 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
+              >
+                {isSimulating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Simulating...</span>
+                  </>
+                ) : (
+                  "Start Simulation"
+                )}
+              </button>
+
+              {error && (
+                <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-100 animate-fade-in">
+                  {error}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl shadow-lg border border-blue-100">
+            <h2 className="text-2xl font-semibold mb-6 text-gray-900">
+              Historical Data
+            </h2>
+            <HistoricalDataChart dateRange={dateRange} />
+          </div>
+        </div>
+
+        {simulationSteps.length > 0 && (
+          <>
+            <div className="mt-8 bg-white p-8 rounded-2xl shadow-lg border border-blue-100 animate-fade-in">
+              <h2 className="text-2xl font-semibold mb-6 text-gray-900">
+                Simulation Results
+              </h2>
+              <StrategySteps
+                key={simulationSteps.length}
+                steps={simulationSteps}
+                onComplete={handleStepsComplete}
+              />
+            </div>
+            
+            {hasPlayedAllSteps && (
+              <div className="mt-8 bg-white p-8 rounded-2xl shadow-lg border border-blue-100 animate-fade-in">
+                <h2 className="text-2xl font-semibold mb-6 text-gray-900">
+                  Strategy Performance Analysis
+                </h2>
+                <StrategyPerformance steps={simulationSteps} />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </main>
   );
 }
