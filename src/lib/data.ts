@@ -182,11 +182,11 @@ function interpolateMissingPoints(
         interpolated.push(pointMap.get(timestamp)!);
       } else {
         // Find nearest points before and after
-        const before = [...pointMap.entries()]
+        const before = Array.from(pointMap.entries())
           .filter(([t]) => t < timestamp)
           .sort((a, b) => b[0] - a[0])[0];
 
-        const after = [...pointMap.entries()]
+        const after = Array.from(pointMap.entries())
           .filter(([t]) => t > timestamp)
           .sort((a, b) => a[0] - b[0])[0];
 
