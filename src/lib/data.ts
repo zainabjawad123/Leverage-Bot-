@@ -75,7 +75,7 @@ async function fetchPriceHistory(
   } catch (error) {
     console.error(`Error fetching price history for ${contract}:`, error);
     throw new Error(
-      `Failed to fetch price data for ${contract}: ${error.message}`
+      `Failed to fetch price data for ${contract}: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
@@ -148,7 +148,7 @@ async function fetchGasPrice(
     return prices;
   } catch (error) {
     console.error("Error fetching gas price history:", error);
-    throw new Error(`Failed to fetch gas price data: ${error.message}`);
+    throw new Error(`Failed to fetch gas price data: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -221,7 +221,7 @@ function interpolateMissingPoints(
     return interpolated;
   } catch (error) {
     console.error("Error during interpolation:", error);
-    throw new Error(`Failed to interpolate data points: ${error.message}`);
+    throw new Error(`Failed to interpolate data points: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -281,6 +281,6 @@ export async function fetchHistoricalData(startDate: Date, endDate: Date) {
     };
   } catch (error) {
     console.error("Error in fetchHistoricalData:", error);
-    throw new Error(`Failed to fetch historical price data: ${error.message}`);
+    throw new Error(`Failed to fetch historical price data: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
